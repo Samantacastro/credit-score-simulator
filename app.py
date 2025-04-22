@@ -11,10 +11,19 @@ st.markdown("Predict your credit score and get AI advice based on your financial
 try:
     model = joblib.load("credit_model.pkl")
     scaler = joblib.load("scaler.pkl")
-    label_enc = joblib.load("label_encoder.pkl")
 except Exception as e:
     st.error(f"❌ Failed to load model files: {e}")
     st.stop()
+
+# --- Manual encoding maps ---
+enc_mix = {'Bad': 0, 'Good': 1, 'Standard': 2}
+enc_minpay = {'No': 0, 'Unknown': 1, 'Yes': 2}
+enc_behave = {
+    'High_spent_Large_value_payments': 0,
+    'High_spent_Medium_value_payments': 1,
+    'Low_spent_Large_value_payments': 2,
+    'Low_spent_Small_value_payments': 3
+}
 
 # --- User Input ---
 with st.form("form"):
@@ -29,28 +38,23 @@ with st.form("form"):
     delayed_payments = st.slider("Delayed Payments", 0, 20, 0)
     credit_limit_change = st.number_input("Change in Credit Limit ($)", value=0.0)
     credit_inquiries = st.slider("Credit Inquiries", 0, 15, 1)
-    credit_mix = st.selectbox("Credit Mix", ["Good", "Standard", "Bad"])
+    credit_mix = st.selectbox("Credit Mix", list(enc_mix.keys()))
     debt = st.number_input("Outstanding Debt ($)", 0.0, 100000.0, 5000.0)
     utilization = st.slider("Credit Utilization Ratio (%)", 0.0, 100.0, 35.0)
     history = st.slider("Credit History Age (months)", 0, 480, 60)
-    min_payment = st.selectbox("Payment of Minimum Amount", ["Yes", "No", "Unknown"])
+    min_payment = st.selectbox("Payment of Minimum Amount", list(enc_minpay.keys()))
     emi = st.number_input("EMI Per Month ($)", 0.0, 10000.0, 150.0)
     invested = st.number_input("Invested Monthly ($)", 0.0, 10000.0, 200.0)
-    behaviour = st.selectbox("Payment Behaviour", [
-        "Low_spent_Small_value_payments",
-        "High_spent_Medium_value_payments",
-        "Low_spent_Large_value_payments",
-        "High_spent_Large_value_payments"
-    ])
+    behaviour = st.selectbox("Payment Behaviour", list(enc_behave.keys()))
     balance = st.number_input("Monthly Balance ($)", 0.0, 10000.0, 500.0)
     submit = st.form_submit_button("🔮 Predict")
 
 # --- Run Prediction ---
 if submit:
     try:
-        mix = label_enc.transform([credit_mix])[0]
-        minpay = label_enc.transform([min_payment])[0]
-        behave = label_enc.transform([behaviour])[0]
+        mix = enc_mix.get(credit_mix, 1)
+        minpay = enc_minpay.get(min_payment, 2)
+        behave = enc_behave.get(behaviour, 3)
 
         inputs = np.array([
             age, income, inhand_salary, bank_accounts, credit_cards,
@@ -62,11 +66,10 @@ if submit:
         scaled = scaler.transform(inputs)
         pred = model.predict(scaled)[0]
 
-        # Only use this for display and AI advice — never feed it into another transformation!
         score_map = {0: "Poor", 1: "Standard", 2: "Good"}
         score_label = score_map.get(pred, "Unknown")
-        st.subheader(f"🧾 Your Predicted Credit Score: {score_label}")
-        
+        st.subheader(f"📟 Your Predicted Credit Score: {score_label}")
+
     except Exception as e:
         st.error(f"Prediction failed: {e}")
         st.stop()
@@ -102,6 +105,4 @@ if submit:
             st.warning("Together AI could not respond at this time.")
     except Exception as e:
         st.warning(f"AI advice failed: {e}")
-
-
 
