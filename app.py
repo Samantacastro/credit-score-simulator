@@ -24,6 +24,11 @@ enc_behave = {
     'Low_spent_Large_value_payments': 2,
     'Low_spent_Small_value_payments': 3
 }
+enc_occupation = {
+    'Accountant': 0, 'Engineer': 1, 'Doctor': 2, 'Lawyer': 3,
+    'Teacher': 4, 'Entrepreneur': 5, 'Manager': 6, 'Scientist': 7,
+    'Developer': 8, 'Unknown': 9
+}
 
 # --- User Input ---
 with st.form("form"):
@@ -39,6 +44,7 @@ with st.form("form"):
     credit_limit_change = st.number_input("Change in Credit Limit ($)", value=0.0)
     credit_inquiries = st.slider("Credit Inquiries", 0, 15, 1)
     credit_mix = st.selectbox("Credit Mix", list(enc_mix.keys()))
+    occupation = st.selectbox("Occupation", list(enc_occupation.keys()))
     debt = st.number_input("Outstanding Debt ($)", 0.0, 100000.0, 5000.0)
     utilization = st.slider("Credit Utilization Ratio (%)", 0.0, 100.0, 35.0)
     history = st.slider("Credit History Age (months)", 0, 480, 60)
@@ -55,11 +61,12 @@ if submit:
         mix = enc_mix.get(credit_mix, 1)
         minpay = enc_minpay.get(min_payment, 2)
         behave = enc_behave.get(behaviour, 3)
+        occup = enc_occupation.get(occupation, 9)
 
         inputs = np.array([
             age, income, inhand_salary, bank_accounts, credit_cards,
             interest_rate, loans, delayed_payments, credit_limit_change,
-            credit_inquiries, mix, debt, utilization, history,
+            credit_inquiries, mix, occup, debt, utilization, history,
             minpay, emi, invested, behave, balance
         ]).reshape(1, -1)
 
@@ -84,7 +91,7 @@ if submit:
 
         prompt = f"""
         User Info: Age={age}, Income={income}, Credit Cards={credit_cards}, Delayed Payments={delayed_payments},
-        Debt={debt}, Utilization={utilization}, Credit Mix={credit_mix}, Score={score_label}.
+        Debt={debt}, Utilization={utilization}, Credit Mix={credit_mix}, Occupation={occupation}, Score={score_label}.
         Provide personalized credit score improvement advice.
         """
 
@@ -105,4 +112,3 @@ if submit:
             st.warning("Together AI could not respond at this time.")
     except Exception as e:
         st.warning(f"AI advice failed: {e}")
-
