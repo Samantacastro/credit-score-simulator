@@ -53,8 +53,7 @@ with st.form("form"):
     invested = st.number_input("Invested Monthly ($)", 0.0, 10000.0, 200.0)
     behaviour = st.selectbox("Payment Behaviour", list(enc_behave.keys()))
     balance = st.number_input("Monthly Balance ($)", 0.0, 10000.0, 500.0)
-    num_of_loans = st.slider("Actual Number of Loans", 0, 10, 1)  # extra feature from dataset
-    changed_limit = st.number_input("Changed Credit Limit ($)", 0.0, 10000.0, 100.0)  # extra feature
+    changed_limit = st.number_input("Changed Credit Limit ($)", 0.0, 10000.0, 100.0)
     submit = st.form_submit_button("🔮 Predict")
 
 # --- Run Prediction ---
@@ -69,7 +68,7 @@ if submit:
             age, income, inhand_salary, bank_accounts, credit_cards,
             interest_rate, loans, delayed_payments, credit_limit_change,
             credit_inquiries, mix, occup, debt, utilization, history,
-            minpay, emi, invested, behave, balance, num_of_loans, changed_limit
+            minpay, emi, invested, behave, balance, changed_limit
         ]).reshape(1, -1)
 
         scaled = scaler.transform(inputs)
@@ -114,4 +113,5 @@ if submit:
             st.warning("Together AI could not respond at this time.")
     except Exception as e:
         st.warning(f"AI advice failed: {e}")
+
 
